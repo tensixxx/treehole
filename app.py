@@ -15,8 +15,8 @@ class Post(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-@app.before_first_request
-def create_tables():
+# ✅ 主动建表（全局只跑一次，稳定）
+with app.app_context():
     db.create_all()
 
 @app.route("/")
@@ -33,7 +33,6 @@ def add_post():
         db.session.commit()
     return redirect(url_for("index"))
 
-# 下面这一段不会被 Render 调用，部署时不会触发
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
