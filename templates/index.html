@@ -1,29 +1,71 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Treehole</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="bg-gray-100 py-10">
-    <div class="max-w-xl mx-auto bg-white rounded-xl shadow p-6">
-      <h1 class="text-2xl font-bold mb-4">🌳 暗恋是一件大事</h1>
-      <form method="post" class="mb-6 space-y-2">
-        <textarea name="content" rows="3" placeholder="Say something..." required class="w-full border rounded-md p-2"></textarea>
-        <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Post</button>
-      </form>
-      <hr class="my-4">
-      <div class="space-y-4">
-        {% for post in posts %}
-        <div class="p-3 border rounded bg-gray-50">
-          <p>{{ post.content }}</p>
-          <small class="text-gray-500">{{ post.created_at.strftime('%Y‑%m‑%d %H:%M:%S') }}</small>
+<head>
+    <meta charset="UTF-8">
+    <title>匿名树洞留言板</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background-color: #f7f7f7;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            margin-bottom: 30px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .post {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #777;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌳 匿名树洞留言板</h1>
+
+    <form method="POST" action="/add">
+        <textarea name="content" placeholder="写点什么吧..." required></textarea><br>
+        <button type="submit">发布留言</button>
+    </form>
+
+    <hr>
+
+    {% for post in posts %}
+        <div class="post">
+            <p>{{ post.content | safe }}</p>
+            <div class="timestamp">{{ post.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
         </div>
-        {% else %}
-        <p class="text-gray-500">No posts yet. Be the first!</p>
-        {% endfor %}
-      </div>
-    </div>
-  </body>
+    {% else %}
+        <p>还没有任何留言，快来发布吧！</p>
+    {% endfor %}
+</body>
 </html>
