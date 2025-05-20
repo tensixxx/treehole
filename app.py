@@ -25,8 +25,18 @@ with app.app_context():
 
 @app.route("/")
 def index():
+    # 访问计数逻辑
+    visit = Visit.query.first()
+    if not visit:
+        visit = Visit(count=1)
+        db.session.add(visit)
+    else:
+        visit.count += 1
+    db.session.commit()
+
     posts = Post.query.order_by(Post.created_at.desc()).all()
-    return render_template("index.html", posts=posts)
+    return render_template("index.html", posts=posts, visit_count=visit.count)
+
 
 @app.route("/add", methods=["POST"])
 def add_post():
