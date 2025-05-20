@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>匿名树洞留言板</title>
+    <title>暗恋是一件大事</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -50,11 +50,11 @@
     </style>
 </head>
 <body>
-    <h1>🌳 匿名树洞留言板</h1>
+    <h1>🌳 暗恋是一件大事 - 匿名投稿箱</h1>
 
     <form method="POST" action="/add">
         <textarea name="content" placeholder="写点什么吧..." required></textarea><br>
-        <button type="submit">发布留言</button>
+        <button type="submit">发布投稿</button>
     </form>
 
     <hr>
@@ -65,7 +65,7 @@
             <div class="timestamp">{{ post.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
         </div>
     {% else %}
-        <p>还没有任何留言，快来发布吧！</p>
+        <p>还没有任何投稿，快来发布吧！</p>
     {% endfor %}
 </body>
 </html>
