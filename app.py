@@ -5,11 +5,7 @@ import os
 
 app = Flask(__name__)
 
-# Use SQLite by default; override with DATABASE_URL env var if you attach
-# a Render persistent disk or switch to Postgres later.
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL", "sqlite:///treehole.db"
-)
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///treehole.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -19,4 +15,25 @@ class Post(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Auto
+# 首页路由，显示所有留言
+@app.route("/")
+def index():
+    posts = Post.query.order_by(Post.created_at.desc()).all()
+    return render_template("index.html", posts=posts)
+
+# 提交新留言
+@app.route("/add", methods=["POST"])
+def add_post():
+    content = request.form.get("content")
+    if content:
+        new_post = Post(content=content)
+        db.session.add(new_post)
+        db.session.commit()
+    return redirect(url_for("index"))
+
+# 启动服务
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
