@@ -1,0 +1,48 @@
+body {
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 0 20px;
+    background-color: #f7f7f7;
+}
+
+h1 {
+    text-align: center;
+}
+
+form {
+    margin-bottom: 30px;
+}
+
+textarea {
+    width: 100%;
+    height: 100px;
+    padding: 10px;
+    font-size: 16px;
+}
+
+button {
+    margin-top: 10px;
+    padding: 8px 16px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.divider {
+    width: 104%;
+}
+
+.post {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    width: 100%;
+}
+
+.timestamp {
+    font-size: 12px;
+    color: #777;
+    margin-top: 6px;
+}
