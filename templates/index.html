@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>暗恋是一件大事</title>
-  <link rel="stylesheet" href="\static\index.css">
+  <link rel="stylesheet" href="/static/index.css">
 </head>
 
 <body>
@@ -21,27 +21,46 @@
   <hr class="divider">
 
   {% for post in posts %}
-  <div class=" post">
+  <div class="post">
     <p><strong>【{{ posts|length - loop.index0 }}】</strong>{{ post.content | safe }}</p>
     <div class="timestamp" data-utc="{{ post.created_at.strftime('%Y-%m-%dT%H:%M:%SZ') }}"></div>
-    <form action="{{ url_for('like_post', post_id=post.id) }}" method="post">
-      <button type="submit">👍 {{ post.likes }}</button>
+
+    <!-- 👍 AJAX 点赞按钮 -->
+    <form class="like-form" data-post-id="{{ post.id }}">
+      <button type="submit">👍 <span class="like-count">{{ post.likes }}</span></button>
     </form>
   </div>
   {% else %}
   <p>还没有任何投稿，快来发布吧！</p>
   {% endfor %}
 
-</body>
+  <script>
+    // ⏰ 显示本地时间
+    document.querySelectorAll('.timestamp').forEach(el => {
+      const utcTime = el.getAttribute('data-utc');
+      if (utcTime) {
+        const localTime = new Date(utcTime).toLocaleString();
+        el.textContent = localTime;
+      }
+    });
 
-<script>
-  document.querySelectorAll('.timestamp').forEach(el => {
-    const utcTime = el.getAttribute('data-utc');
-    if (utcTime) {
-      const localTime = new Date(utcTime).toLocaleString();
-      el.textContent = localTime;
-    }
-  });
-</script>
+    // 👍 处理点赞按钮 AJAX 提交
+    document.querySelectorAll('.like-form').forEach(form => {
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const postId = form.dataset.postId;
+        const response = await fetch(`/like/${postId}`, { method: 'POST' });
+        const result = await response.json();
+
+        if (result.success) {
+          const countSpan = form.querySelector('.like-count');
+          countSpan.textContent = result.likes;
+        } else {
+          alert(result.message); // 你已经点过赞了
+        }
+      });
+    });
+  </script>
+</body>
 
 </html>
