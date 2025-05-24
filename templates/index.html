@@ -15,27 +15,50 @@
 
   <form method="POST" action="/add">
     <textarea name="content" placeholder="写点什么吧..." required></textarea><br>
-    <button type="submit">发布投稿</button>
+    <button type="submit" class="post-button">发布投稿</button>
   </form>
 
   <hr class="divider">
 
   {% for post in posts %}
-  <div class="post">
+  <div class="post" id="post-{{ post.id }}">
     <p><strong>【{{ posts|length - loop.index0 }}】</strong>{{ post.content | safe }}</p>
     <div class="timestamp" data-utc="{{ post.created_at.strftime('%Y-%m-%dT%H:%M:%SZ') }}"></div>
 
-    <!-- 👍 AJAX 点赞按钮 -->
-    <form class="like-form" data-post-id="{{ post.id }}">
-      <button type="submit">👍 <span class="like-count">{{ post.likes }}</span></button>
-    </form>
+    <div class="action-bar">
+      <div class="left-actions">
+        <button type="button" class="toggle-comments-btn">💬 查看评论</button>
+      </div>
+      <div class="right-actions">
+        <form class="like-form" data-post-id="{{ post.id }}">
+          <button type="submit" class="like-button">
+            👍 <span class="like-count">{{ post.likes }}</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+
+    <div class="comments-section" style="display: none;">
+      <div class="comments" id="comments-{{ post.id }}">
+        {% for comment in post.comments %}
+        <div class="comment">
+          💬 {{ comment.content }}（{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}）
+        </div>
+        {% endfor %}
+      </div>
+      <form class="comment-form" data-post-id="{{ post.id }}">
+        <input type="text" name="comment" placeholder="写下你的评论..." required>
+        <button type="submit" class="comment-button">评论</button>
+      </form>
+    </div>
   </div>
   {% else %}
   <p>还没有任何投稿，快来发布吧！</p>
   {% endfor %}
 
   <script>
-    // ⏰ 显示本地时间
+    // 本地时间转换
     document.querySelectorAll('.timestamp').forEach(el => {
       const utcTime = el.getAttribute('data-utc');
       if (utcTime) {
@@ -44,19 +67,63 @@
       }
     });
 
-    // 👍 处理点赞按钮 AJAX 提交
+    // 点赞按钮 AJAX
     document.querySelectorAll('.like-form').forEach(form => {
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
         const postId = form.dataset.postId;
         const response = await fetch(`/like/${postId}`, { method: 'POST' });
         const result = await response.json();
-
         if (result.success) {
           const countSpan = form.querySelector('.like-count');
           countSpan.textContent = result.likes;
         } else {
-          alert(result.message); // 你已经点过赞了
+          alert(result.message);
+        }
+      });
+    });
+
+    // 折叠评论
+    document.querySelectorAll('.toggle-comments-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const section = button.closest('.post').querySelector('.comments-section');
+        if (section.style.display === 'none') {
+          section.style.display = 'block';
+          button.innerHTML = '🔽 收起评论';
+        } else {
+          section.style.display = 'none';
+          button.innerHTML = '💬 查看评论';
+        }
+      });
+    });
+
+    // 评论表单 AJAX 提交
+    document.querySelectorAll('.comment-form').forEach(form => {
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const postId = form.dataset.postId;
+        const input = form.querySelector('input[name="comment"]');
+        const comment = input.value.trim();
+        if (!comment) return;
+
+        const response = await fetch(`/comment/${postId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ comment: comment })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          const commentList = document.getElementById(`comments-${postId}`);
+          const div = document.createElement('div');
+          div.className = 'comment';
+          div.textContent = `💬 ${result.comment}（刚刚）`;
+          commentList.appendChild(div);
+          input.value = '';
+        } else {
+          alert('评论提交失败');
         }
       });
     });
