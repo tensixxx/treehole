@@ -30,6 +30,13 @@ class LikeLog(db.Model):
         db.UniqueConstraint('post_id', 'user_ip', name='unique_like_per_user_per_post'),
     )
 
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    post = db.relationship('Post', backref=db.backref('comments', lazy=True))
+
 with app.app_context():
     db.create_all()
 
@@ -61,12 +68,24 @@ def like_post(post_id):
     existing_like = LikeLog.query.filter_by(post_id=post_id, user_ip=user_ip).first()
     if existing_like:
         return jsonify({'success': False, 'message': 'Already liked'})
-    
+
     post = Post.query.get_or_404(post_id)
     post.likes += 1
     db.session.add(LikeLog(post_id=post_id, user_ip=user_ip))
     db.session.commit()
     return jsonify({'success': True, 'likes': post.likes})
+
+@app.route('/comment/<int:post_id>', methods=['POST'])
+def add_comment(post_id):
+    data = request.get_json()
+    content = data.get('comment', '').strip()
+    if content:
+        comment = Comment(post_id=post_id, content=content)
+        db.session.add(comment)
+        db.session.commit()
+        return jsonify({"success": True, "comment": content})
+    return jsonify({"success": False, "message": "Empty comment"}), 400
+
 
 if __name__ == "__main__":
     with app.app_context():
