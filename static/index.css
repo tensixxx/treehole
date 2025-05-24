@@ -46,3 +46,101 @@ button {
     color: #777;
     margin-top: 6px;
 }
+
+/* 👉 评论 + 点赞按钮统一样式区域 */
+
+.action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    margin-top: 8px;
+    margin-bottom: 6px;
+}
+
+/* 强制 form 不要占整行 */
+.like-form {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+}
+
+/* 两个按钮统一样式 */
+.toggle-comments-btn,
+.like-button,
+.comment-button {
+    background-color: #f2f2f2;
+    padding: 6px 12px;
+    border: 1px solid;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s, transform 0.2s;
+    white-space: nowrap;
+}
+
+.toggle-comments-btn:hover,
+.like-button:hover,
+.comment-button:hover {
+    background-color: #e0e0e0;
+    transform: scale(1.05);
+}
+
+.toggle-comments-btn:active,
+.like-button:active,
+.comment-button:hover {
+    transform: scale(0.95);
+}
+
+.like-count {
+    font-weight: bold;
+}
+
+/*“发布投稿”按钮*/
+.post-button {
+    background-color: #f2f2f2;
+    padding: 6px 12px;
+    border: 1px solid;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s, transform 0.2s;
+    white-space: nowrap;
+}
+
+/*评论按钮*/
+.comment-button {
+    background-color: #f2f2f2;
+    border: 1px solid;
+    padding: 4px 8px;
+    /* 小一点的内边距 */
+    font-size: 14px;
+    /* 字体小一点 */
+    line-height: 1.2;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s, transform 0.2s;
+    white-space: nowrap;
+    box-shadow: none;
+    /* 防止浏览器自动加投影 */
+}
+
+.comment-button:hover {
+    background-color: #e0e0e0;
+}
+
+.comment-button:active {
+    transform: scale(0.95);
+}
