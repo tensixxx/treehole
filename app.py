@@ -18,6 +18,7 @@ class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    likes = db.Column(db.Integer, default=0)
 
 # ✅ 主动建表（全局只跑一次，稳定）
 with app.app_context():
@@ -47,10 +48,22 @@ def add_post():
         db.session.commit()
     return redirect(url_for("index"))
 
+#帖子点赞按钮
+@app.route('/like/<int:post_id>', methods=['POST'])
+def like_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    post.likes += 1
+    db.session.commit()
+    return redirect(url_for('index'))
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
 
-
+#How to run
+#python -m venv venv
+#venv\Scripts\activate
+#pip install flask flask_sqlalchemy
+#python app.py
