@@ -12,7 +12,7 @@
   <p style="text-align: center; color: gray;">
     👀 已有 {{ visit_count }} 次访问
   </p>
-
+  <p>微博：暗恋是一件大事<br>投稿格式无要求，会自动添加【编号】</p>
   <form method="POST" action="/add">
     <textarea name="content" placeholder="写点什么吧..." required></textarea><br>
     <button type="submit" class="post-button">发布投稿</button>
@@ -43,7 +43,8 @@
       <div class="comments" id="comments-{{ post.id }}">
         {% for comment in post.comments %}
         <div class="comment">
-          💬 {{ comment.content }}（{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}）
+          💬 {{ comment.content }}<span class="comment-time">（{{ comment.created_at.strftime('%Y-%m-%d %H:%M')
+            }}）</span>
         </div>
         {% endfor %}
       </div>
