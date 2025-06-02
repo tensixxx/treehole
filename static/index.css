@@ -1,3 +1,5 @@
+
+/* Core layout */
 body {
     font-family: Arial, sans-serif;
     max-width: 600px;
@@ -10,10 +12,6 @@ h1 {
     text-align: center;
 }
 
-form {
-    margin-bottom: 30px;
-}
-
 textarea {
     width: 100%;
     height: 100px;
@@ -22,14 +20,9 @@ textarea {
 }
 
 button {
-    margin-top: 10px;
     padding: 8px 16px;
     font-size: 16px;
     cursor: pointer;
-}
-
-.divider {
-    width: 104%;
 }
 
 .post {
@@ -46,8 +39,6 @@ button {
     color: #777;
     margin-top: 6px;
 }
-
-/* 👉 评论 + 点赞按钮统一样式区域 */
 
 .action-bar {
     display: flex;
@@ -66,18 +57,17 @@ button {
     gap: 8px;
 }
 
-/* 强制 form 不要占整行 */
-.like-form {
-    display: inline;
+.right-actions form {
+    display: inline-flex;
+    align-items: center;
     margin: 0;
     padding: 0;
-    white-space: nowrap;
 }
 
-/* 两个按钮统一样式 */
 .toggle-comments-btn,
 .like-button,
-.comment-button {
+.comment-button,
+.delete-button {
     background-color: #f2f2f2;
     padding: 6px 12px;
     border: 1px solid;
@@ -93,62 +83,16 @@ button {
 
 .toggle-comments-btn:hover,
 .like-button:hover,
-.comment-button:hover {
+.comment-button:hover,
+.delete-button:hover {
     background-color: #e0e0e0;
     transform: scale(1.05);
 }
 
 .toggle-comments-btn:active,
 .like-button:active,
-.comment-button:hover {
-    transform: scale(0.95);
-}
-
-.like-count {
-    font-weight: bold;
-}
-
-/*“发布投稿”按钮*/
-.post-button {
-    background-color: #f2f2f2;
-    padding: 6px 12px;
-    border: 1px solid;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 15px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: background-color 0.2s, transform 0.2s;
-    white-space: nowrap;
-}
-
-/*评论按钮*/
-.comment-button {
-    background-color: #f2f2f2;
-    border: 1px solid;
-    padding: 4px 8px;
-    /* 小一点的内边距 */
-    font-size: 14px;
-    /* 字体小一点 */
-    line-height: 1.2;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 15px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: background-color 0.2s, transform 0.2s;
-    white-space: nowrap;
-    box-shadow: none;
-    /* 防止浏览器自动加投影 */
-}
-
-.comment-button:hover {
-    background-color: #e0e0e0;
-}
-
-.comment-button:active {
+.comment-button:active,
+.delete-button:active {
     transform: scale(0.95);
 }
 
@@ -157,8 +101,8 @@ button {
     color: #888;
 }
 
-/* 删除按钮样式，和点赞评论按钮统一 */
-.delete-button {
+.post-button {
+    margin-top: 10px;
     background-color: #f2f2f2;
     padding: 6px 12px;
     border: 1px solid;
@@ -172,19 +116,6 @@ button {
     white-space: nowrap;
 }
 
-.delete-button:hover {
-    background-color: #e0e0e0;
-    transform: scale(1.05);
-}
-
-.delete-button:active {
-    transform: scale(0.95);
-}
-
-/* ✅ 统一按钮 form 的样式，避免换行 */
-.right-actions form {
-    display: inline-flex;
-    align-items: center;
-    margin: 0;
-    padding: 0;
+.divider {
+    width: 104%;
 }
