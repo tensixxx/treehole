@@ -3,8 +3,26 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.timestamp').forEach(el => {
         const utcTime = el.getAttribute('data-utc');
         if (utcTime) {
-            const localTime = new Date(utcTime).toLocaleString();
-            el.textContent = localTime;
+            const timeAgo = (date) => {
+                const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+                const intervals = {
+                    year: 31536000,
+                    month: 2592000,
+                    week: 604800,
+                    day: 86400,
+                    hour: 3600,
+                    minute: 60,
+                    second: 1
+                };
+                for (const unit in intervals) {
+                    const interval = Math.floor(seconds / intervals[unit]);
+                    if (interval >= 1) {
+                        return interval + ' ' + unit + (interval > 1 ? 's' : '') + ' ago';
+                    }
+                }
+                return 'just now';
+            };
+            el.textContent = timeAgo(utcTime);
         }
     });
 
