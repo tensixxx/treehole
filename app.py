@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
+from flask import request, jsonify
 
 app = Flask(__name__)
 
@@ -19,6 +20,7 @@ class Post(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     likes = db.Column(db.Integer, default=0)
+    user_ip = db.Column(db.String(100), nullable=False)
 
 class LikeLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -55,12 +57,28 @@ def index():
 
 @app.route("/add", methods=["POST"])
 def add_post():
-    content = request.form.get("content")
-    if content:
-        new_post = Post(content=content)
-        db.session.add(new_post)
-        db.session.commit()
-    return redirect(url_for("index"))
+    data = request.get_json()
+    content = data.get("content", "").strip()
+    if not content:
+        return jsonify({"success": False, "message": "内容不能为空"}), 400
+
+    user_ip = request.remote_addr
+    new_post = Post(content=content, user_ip=user_ip)
+    db.session.add(new_post)
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "id": new_post.id,
+        "number": Post.query.count(),
+        "content": new_post.content,
+        "created_at": new_post.created_at.strftime("%Y-%m-%d %H:%M:%S")
+    })
+
+
+
+
+
 
 @app.route('/like/<int:post_id>', methods=['POST'])
 def like_post(post_id):
@@ -85,6 +103,16 @@ def add_comment(post_id):
         db.session.commit()
         return jsonify({"success": True, "comment": content})
     return jsonify({"success": False, "message": "Empty comment"}), 400
+
+@app.route('/delete/<int:post_id>', methods=['POST'])
+def delete_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    if post.user_ip != request.remote_addr:
+        return "Unauthorized", 403  # 禁止删除他人的帖子
+    db.session.delete(post)
+    db.session.commit()
+    return redirect(url_for('index'))
+
 
 
 if __name__ == "__main__":
