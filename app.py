@@ -93,6 +93,19 @@ def add_comment(post_id):
         return jsonify({"success": True, "comment": content})
     return jsonify({"success": False, "message": "Empty comment"}), 400
 
+@app.route('/comment/<int:post_id>', methods=['GET'])
+def get_comments(post_id):
+    post = Post.query.get_or_404(post_id)
+    comments = [
+        {
+            "content": c.content,
+            "created_at": c.created_at.strftime("%Y-%m-%d %H:%M")
+        }
+        for c in post.comments
+    ]
+    return jsonify(comments)
+
+
 @app.route('/delete/<int:post_id>', methods=['POST'])
 def delete_post(post_id):
     post = Post.query.get_or_404(post_id)
