@@ -12,16 +12,18 @@
   <p style="text-align: center; color: gray;">
     👀 已有 {{ visit_count }} 次访问
   </p>
-  <p>微博：暗恋是一件大事<br>投稿格式无要求，会自动添加【编号】
-  <p>稿件较多不会把网站上每个稿都清到微博上了，点赞高的也许会发到微博上，欢迎大家积极评论点赞！<br>欢迎投稿期待的功能，目前正在努力建设按照点赞数量排序和添加标签等功能</p>
+  <p>微博：暗恋是一件大事<br>投稿格式无要求，会自动添加【编号】</p>
+  <p>稿件较多不会把网站上每个稿都清到微博上了，点赞高的也许会发到微博上，欢迎大家积极评论点赞！<br>
+    欢迎投稿期待的功能，目前正在努力建设按照点赞数量排序和添加标签等功能</p>
+
   <form id="post-form">
     <textarea name="content" placeholder="写点什么吧..." required></textarea><br>
     <button type="submit" class="post-button">发布投稿</button>
   </form>
 
-
   <hr class="divider">
 
+  {% if posts %}
   {% for post in posts %}
   <div class="post" id="post-{{ post.id }}">
     <p><strong>【{{ posts|length - loop.index0 }}】</strong>{{ post.content | safe }}</p>
@@ -29,24 +31,27 @@
 
     <div class="action-bar">
       <div class="left-actions">
-        <button type="button" class="toggle-comments-btn">💬 查看评论</button>
+        <button type="button" class="toggle-comments-btn">💬 查看评论（{{ post.comments|length }}）</button>
       </div>
       <div class="right-actions">
         <form class="like-form" data-post-id="{{ post.id }}">
-          <button type="submit" class="like-button">
-            👍 <span class="like-count">{{ post.likes }}</span>
-          </button>
+          <button type="submit" class="like-button">👍 <span class="like-count">{{ post.likes }}</span></button>
         </form>
+        {% if post.user_ip == user_ip %}
+        <form action="/delete/{{ post.id }}" method="post" onsubmit="return confirm('确定删除？');" style="display: inline;">
+          <button type="submit" class="delete-button">🗑 删除</button>
+        </form>
+        {% endif %}
       </div>
     </div>
 
-
+    <!-- 评论区 -->
     <div class="comments-section" style="display: none;">
       <div class="comments" id="comments-{{ post.id }}">
         {% for comment in post.comments %}
         <div class="comment">
-          💬 {{ comment.content }}<span class="comment-time">（{{ comment.created_at.strftime('%Y-%m-%d %H:%M')
-            }}）</span>
+          💬 {{ comment.content }}
+          <span class="comment-time">（{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}）</span>
         </div>
         {% endfor %}
       </div>
@@ -56,12 +61,12 @@
       </form>
     </div>
   </div>
+  {% endfor %}
   {% else %}
   <p>还没有任何投稿，快来发布吧！</p>
-  {% endfor %}
+  {% endif %}
 
   <script src="/static/index.js"></script>
-
 </body>
 
 </html>
