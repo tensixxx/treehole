@@ -23,50 +23,43 @@
 
   <hr class="divider">
 
-  {% if posts %}
-  {% for post in posts %}
-  <div class="post" id="post-{{ post.id }}">
-    <p><strong>【{{ posts|length - loop.index0 }}】</strong>{{ post.content | safe }}</p>
-    <div class="timestamp" data-utc="{{ post.created_at.strftime('%Y-%m-%dT%H:%M:%SZ') }}"></div>
+  <div class="posts-container">
+    {% if posts %}
+    {% for post in posts %}
+    <div class="post" id="post-{{ post.id }}">
+      <p><strong>【{{ posts|length - loop.index0 }}】</strong>{{ post.content | safe }}</p>
+      <div class="timestamp" data-utc="{{ post.created_at.strftime('%Y-%m-%dT%H:%M:%SZ') }}"></div>
 
-    <div class="action-bar">
-      <div class="left-actions">
-        <button type="button" class="toggle-comments-btn">💬 查看评论（{{ post.comments|length }}）</button>
-      </div>
-      <div class="right-actions">
-        <form class="like-form" data-post-id="{{ post.id }}">
-          <button type="submit" class="like-button">👍 <span class="like-count">{{ post.likes }}</span></button>
-        </form>
-        {% if post.user_ip == user_ip %}
-        <form action="/delete/{{ post.id }}" method="post" onsubmit="return confirm('确定删除？');" style="display: inline;">
-          <button type="submit" class="delete-button">🗑 删除</button>
-        </form>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- 评论区 -->
-    <div class="comments-section" style="display: none;">
-      <div class="comments" id="comments-{{ post.id }}">
-        {% for comment in post.comments %}
-        <div class="comment">
-          💬 {{ comment.content }}
-          <span class="comment-time">（{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}）</span>
+      <div class="action-bar">
+        <div class="left-actions">
+          <button type="button" class="toggle-comments-btn">💬 查看评论（{{ post.comments|length }}）</button>
         </div>
-        {% endfor %}
+        <div class="right-actions">
+          <form class="like-form" data-post-id="{{ post.id }}">
+            <button type="submit" class="like-button">👍 <span class="like-count">{{ post.likes }}</span></button>
+          </form>
+          {% if post.user_ip == user_ip %}
+          <form action="/delete/{{ post.id }}" method="post" onsubmit="return confirm('确定删除？');">
+            <button type="submit" class="delete-button">🗑 删除</button>
+          </form>
+          {% endif %}
+        </div>
       </div>
-      <form class="comment-form" data-post-id="{{ post.id }}">
-        <input type="text" name="comment" placeholder="写下你的评论..." required>
-        <button type="submit" class="comment-button">评论</button>
-      </form>
+
+      <div class="comments-section" style="display: none;">
+        <div class="comments" id="comments-{{ post.id }}"></div>
+        <form class="comment-form" data-post-id="{{ post.id }}">
+          <input type="text" name="comment" placeholder="写下你的评论..." required>
+          <button type="submit" class="comment-button">评论</button>
+        </form>
+      </div>
     </div>
+    {% endfor %}
+    {% else %}
+    <p>还没有任何投稿，快来发布吧！</p>
+    {% endif %}
   </div>
-  {% endfor %}
-  {% else %}
-  <p>还没有任何投稿，快来发布吧！</p>
-  {% endif %}
 
   <script src="/static/index.js" defer></script>
 </body>
-
 </html>
