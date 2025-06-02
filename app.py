@@ -53,7 +53,7 @@ def index():
     db.session.commit()
 
     posts = Post.query.order_by(Post.created_at.desc()).all()
-    return render_template("index.html", posts=posts, visit_count=visit.count)
+    return render_template("index.html", posts=posts, visit_count=visit.count, user_ip=request.remote_addr)
 
 @app.route("/add", methods=["POST"])
 def add_post():
@@ -112,6 +112,7 @@ def delete_post(post_id):
     db.session.delete(post)
     db.session.commit()
     return redirect(url_for('index'))
+
 
 
 
