@@ -59,6 +59,13 @@ button {
     margin-bottom: 6px;
 }
 
+.left-actions,
+.right-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 /* 强制 form 不要占整行 */
 .like-form {
     display: inline;
@@ -143,4 +150,41 @@ button {
 
 .comment-button:active {
     transform: scale(0.95);
+}
+
+.comment-time {
+    font-size: 12px;
+    color: #888;
+}
+
+/* 删除按钮样式，和点赞评论按钮统一 */
+.delete-button {
+    background-color: #f2f2f2;
+    padding: 6px 12px;
+    border: 1px solid;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s, transform 0.2s;
+    white-space: nowrap;
+}
+
+.delete-button:hover {
+    background-color: #e0e0e0;
+    transform: scale(1.05);
+}
+
+.delete-button:active {
+    transform: scale(0.95);
+}
+
+/* ✅ 统一按钮 form 的样式，避免换行 */
+.right-actions form {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
 }
