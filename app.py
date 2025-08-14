@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
@@ -49,8 +48,20 @@ def index():
     else:
         visit.count += 1
     db.session.commit()
-    posts = Post.query.order_by(Post.created_at.desc()).all()
-    return render_template("index.html", posts=posts, visit_count=visit.count, user_ip=request.remote_addr)
+
+    # 分页逻辑
+    page = request.args.get('page', 1, type=int)  # 获取页码，默认 1
+    per_page = 20  # 每页显示 20 条
+    pagination = Post.query.order_by(Post.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    posts = pagination.items
+
+    return render_template(
+        "index.html",
+        posts=posts,
+        visit_count=visit.count,
+        user_ip=request.remote_addr,
+        pagination=pagination
+    )
 
 @app.route("/add", methods=["POST"])
 def add_post():
@@ -104,7 +115,6 @@ def get_comments(post_id):
         for c in post.comments
     ]
     return jsonify(comments)
-
 
 @app.route('/delete/<int:post_id>', methods=['POST'])
 def delete_post(post_id):
