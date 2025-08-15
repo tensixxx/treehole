@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 
 <head>
   <meta charset="UTF-8">
   <title>暗恋是一件大事</title>
   <link rel="stylesheet" href="/static/index.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 <body>
@@ -23,11 +24,11 @@
 
   <hr class="divider">
 
-  <div class="posts-container">
+  <div class="posts-container" id="post-list">
     {% if posts %}
     {% for post in posts %}
     <div class="post" id="post-{{ post.id }}">
-      <p><strong>【{{ posts|length - loop.index0 }}】</strong>{{ post.content | safe }}</p>
+      <p><strong>【{{ post.id }}】</strong>{{ post.content | safe }}</p>
       <div class="timestamp" data-utc="{{ post.created_at.strftime('%Y-%m-%dT%H:%M:%SZ') }}"></div>
 
       <div class="action-bar">
@@ -60,6 +61,52 @@
     {% endif %}
   </div>
 
+  {% if pagination.has_next %}
+  <div style="text-align: center; margin-top: 20px;">
+    <button id="load-more" data-page="{{ pagination.next_num }}">加载更多</button>
+  </div>
+  {% endif %}
+
+  <script>
+    $(document).on('click', '#load-more', function () {
+      let page = $(this).data('page');
+      $.get(`/?page=${page}&ajax=1`, function (data) {
+        data.posts.forEach(function (post) {
+          $('#post-list').append(`
+            <div class="post" id="post-${post.id}">
+              <p><strong>【${post.id}】</strong>${post.content}</p>
+              <div class="timestamp">${post.created_at}</div>
+              <div class="action-bar">
+                <div class="left-actions">
+                  <button type="button" class="toggle-comments-btn">💬 查看评论（${post.comments_count}）</button>
+                </div>
+                <div class="right-actions">
+                  <form class="like-form" data-post-id="${post.id}">
+                    <button type="submit" class="like-button">👍 <span class="like-count">${post.likes}</span></button>
+                  </form>
+                </div>
+              </div>
+              <div class="comments-section" style="display: none;">
+                <div class="comments" id="comments-${post.id}"></div>
+                <form class="comment-form" data-post-id="${post.id}">
+                  <input type="text" name="comment" placeholder="写下你的评论..." required>
+                  <button type="submit" class="comment-button">评论</button>
+                </form>
+              </div>
+            </div>
+          `);
+        });
+
+        if (data.has_next) {
+          $('#load-more').data('page', data.next_page);
+        } else {
+          $('#load-more').remove();
+        }
+      });
+    });
+  </script>
+
   <script src="/static/index.js" defer></script>
 </body>
+
 </html>
