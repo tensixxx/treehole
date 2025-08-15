@@ -24,7 +24,6 @@ class LikeLog(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
     user_ip = db.Column(db.String(100), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
     __table_args__ = (
         db.UniqueConstraint('post_id', 'user_ip', name='unique_like_per_user_per_post'),
     )
@@ -50,33 +49,39 @@ def index():
     db.session.commit()
 
     page = request.args.get('page', 1, type=int)
-    per_page = 20
-    pagination = Post.query.order_by(Post.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
-    posts = pagination.items
+    per_page = 10
 
-    # 如果是 AJAX 请求，返回 JSON
+    total_count = Post.query.count()
+    pagination = Post.query.order_by(Post.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+
+    posts_with_number = []
+    start_number = total_count - (page - 1) * per_page
+    for i, post in enumerate(pagination.items):
+        posts_with_number.append({
+            "id": post.id,
+            "content": post.content,
+            "created_at": post.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "likes": post.likes,
+            "user_ip": post.user_ip,
+            "comments_count": len(post.comments),
+            "number": start_number - i
+        })
+
     if request.args.get('ajax') == '1':
         return jsonify({
-            "posts": [
-                {
-                    "id": p.id,
-                    "content": p.content,
-                    "created_at": p.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                    "likes": p.likes
-                } for p in posts
-            ],
+            "posts": posts_with_number,
             "has_next": pagination.has_next,
-            "next_page": pagination.next_num if pagination.has_next else None
+            "next_page": pagination.next_num if pagination.has_next else None,
+            "user_ip": request.remote_addr
         })
 
     return render_template(
         "index.html",
-        posts=posts,
+        posts=posts_with_number,
         visit_count=visit.count,
-        user_ip=request.remote_addr,
-        pagination=pagination
+        pagination=pagination,
+        user_ip=request.remote_addr
     )
-
 
 @app.route("/add", methods=["POST"])
 def add_post():
@@ -88,10 +93,11 @@ def add_post():
     new_post = Post(content=content, user_ip=user_ip)
     db.session.add(new_post)
     db.session.commit()
+    total_count = Post.query.count()
     return jsonify({
         "success": True,
         "id": new_post.id,
-        "number": Post.query.count(),
+        "number": total_count,
         "content": new_post.content,
         "created_at": new_post.created_at.strftime("%Y-%m-%d %H:%M:%S")
     })
