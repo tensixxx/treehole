@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', function () {
     function timeAgo(date) {
         const seconds = Math.floor((new Date() - new Date(date)) / 1000);
@@ -20,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return 'just now';
     }
 
+    // 初始化时间显示
     document.querySelectorAll('.timestamp').forEach(el => {
         const utcTime = el.getAttribute('data-utc');
         if (utcTime) {
@@ -102,8 +102,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // 绑定现有帖子事件
     document.querySelectorAll('.post').forEach(bindPostEvents);
 
+    // 发布投稿
     document.getElementById('post-form').addEventListener('submit', async function (e) {
         e.preventDefault();
         const form = e.target;
@@ -147,8 +149,53 @@ document.addEventListener('DOMContentLoaded', function () {
                 bindPostEvents(newPost);
             }
             form.reset();
+            alert('发布成功！'); // 新增提示
         } else {
             alert('发布失败');
         }
     });
+
+    // 加载更多
+    const loadMoreBtn = document.getElementById('load-more');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', async function () {
+            const page = loadMoreBtn.dataset.page;
+            const response = await fetch(`/?page=${page}&ajax=1`);
+            if (response.ok) {
+                const data = await response.json();
+                data.posts.forEach(post => {
+                    const html = `
+                    <div class="post" id="post-${post.id}">
+                        <p><strong>【${post.number}】</strong>${post.content}</p>
+                        <div class="timestamp">${timeAgo(post.created_at)}</div>
+                        <div class="action-bar">
+                            <div class="left-actions">
+                                <button type="button" class="toggle-comments-btn">💬 查看评论（${post.comments_count}）</button>
+                            </div>
+                            <div class="right-actions">
+                                <form class="like-form" data-post-id="${post.id}">
+                                    <button type="submit" class="like-button">👍 <span class="like-count">${post.likes}</span></button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="comments-section" style="display: none;">
+                            <div class="comments" id="comments-${post.id}"></div>
+                            <form class="comment-form" data-post-id="${post.id}">
+                                <input type="text" name="comment" placeholder="写下你的评论..." required>
+                                <button type="submit" class="comment-button">评论</button>
+                            </form>
+                        </div>
+                    </div>`;
+                    loadMoreBtn.insertAdjacentHTML('beforebegin', html); // 加载在按钮上方
+                    bindPostEvents(document.getElementById(`post-${post.id}`));
+                });
+
+                if (data.has_next) {
+                    loadMoreBtn.dataset.page = data.next_page;
+                } else {
+                    loadMoreBtn.remove();
+                }
+            }
+        });
+    }
 });
