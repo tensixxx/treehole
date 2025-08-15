@@ -49,11 +49,25 @@ def index():
         visit.count += 1
     db.session.commit()
 
-    # 分页逻辑
-    page = request.args.get('page', 1, type=int)  # 获取页码，默认 1
-    per_page = 20  # 每页显示 20 条
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
     pagination = Post.query.order_by(Post.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
     posts = pagination.items
+
+    # 如果是 AJAX 请求，返回 JSON
+    if request.args.get('ajax') == '1':
+        return jsonify({
+            "posts": [
+                {
+                    "id": p.id,
+                    "content": p.content,
+                    "created_at": p.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    "likes": p.likes
+                } for p in posts
+            ],
+            "has_next": pagination.has_next,
+            "next_page": pagination.next_num if pagination.has_next else None
+        })
 
     return render_template(
         "index.html",
@@ -62,6 +76,7 @@ def index():
         user_ip=request.remote_addr,
         pagination=pagination
     )
+
 
 @app.route("/add", methods=["POST"])
 def add_post():
