@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh">
-
 <head>
   <meta charset="UTF-8">
   <title>暗恋是一件大事</title>
   <link rel="stylesheet" href="/static/index.css">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 <body>
@@ -13,22 +11,28 @@
   <p style="text-align: center; color: gray;">👀 已有 {{ visit_count }} 次访问</p>
   <p>微博：暗恋是一件大事<br>投稿格式无要求，会自动添加【编号】</p>
 
+  <!-- 投稿表单 -->
   <form id="post-form">
     <textarea name="content" placeholder="写点什么吧..." required></textarea><br>
-    <button type="submit" class="post-button">发布投稿</button>
+    <!-- 这里的文字由 JS 根据语言自动设置 -->
+    <button type="submit" class="post-button" id="dynamic-post-button"></button>
   </form>
 
   <hr class="divider">
 
+  <!-- 帖子容器 -->
   <div id="posts-container">
     {% for post in posts %}
     <div class="post" id="post-{{ post.id }}">
       <p><strong>【{{ post.number }}】</strong> {{ post.content | safe }}</p>
-      <div class="timestamp">{{ post.created_at }}</div>
+      <div class="timestamp" data-utc="{{ post.created_at }}">{{ post.created_at }}</div>
 
       <div class="action-bar">
         <div class="left-actions">
-          <button type="button" class="toggle-comments-btn">💬 查看评论（{{ post.comments_count }}）</button>
+          <!-- 评论按钮文字由 JS 自动切换 -->
+          <button type="button" class="toggle-comments-btn">
+            💬 查看评论（{{ post.comments_count }}）
+          </button>
         </div>
         <div class="right-actions">
           <form class="like-form" data-post-id="{{ post.id }}">
@@ -42,11 +46,13 @@
         </div>
       </div>
 
+      <!-- 评论区 -->
       <div class="comments-section" style="display: none;">
         <div class="comments" id="comments-{{ post.id }}"></div>
         <form class="comment-form" data-post-id="{{ post.id }}">
           <input type="text" name="comment" placeholder="写下你的评论..." required>
-          <button type="submit" class="comment-button">评论</button>
+          <!-- 评论按钮文字由 JS 自动切换 -->
+          <button type="submit" class="comment-button"></button>
         </form>
       </div>
     </div>
@@ -57,156 +63,22 @@
   <button id="load-more" data-page="{{ pagination.next_num }}">加载更多</button>
   {% endif %}
 
-  <script>
-    $(document).on('click', '#load-more', function () {
-      let page = $(this).data('page');
-      $.get(`/?page=${page}&ajax=1`, function (data) {
-        data.posts.forEach(function (post) {
-          let html = `
-            <div class="post" id="post-${post.id}">
-              <p><strong>【${post.number}】</strong> ${post.content}</p>
-              <div class="timestamp">${post.created_at}</div>
-              <div class="action-bar">
-                <div class="left-actions">
-                  <button type="button" class="toggle-comments-btn">💬 查看评论（${post.comments_count}）</button>
-                </div>
-                <div class="right-actions">
-                  <form class="like-form" data-post-id="${post.id}">
-                    <button type="submit" class="like-button">👍 <span class="like-count">${post.likes}</span></button>
-                  </form>
-                  ${post.user_ip === data.user_ip ?
-              `<form action="/delete/${post.id}" method="post" onsubmit="return confirm('确定删除？');">
-                      <button type="submit" class="delete-button">🗑 删除</button>
-                    </form>` : ''
-            }
-                </div>
-              </div>
-              <div class="comments-section" style="display: none;">
-                <div class="comments" id="comments-${post.id}"></div>
-                <form class="comment-form" data-post-id="${post.id}">
-                  <input type="text" name="comment" placeholder="写下你的评论..." required>
-                  <button type="submit" class="comment-button">评论</button>
-                </form>
-              </div>
-            </div>
-            `;
-          $('#posts-container').append(html);
-        });
+  <!-- 统一的逻辑文件 -->
+  <script src="/static/index.js"></script>
 
-        if (data.has_next) {
-          $('#load-more').data('page', data.next_page);
-        } else {
-          $('#load-more').remove();
-        }
-      });
+  <!-- 初始化语言文字（防止首屏按钮空白） -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const userLang = navigator.language.startsWith('zh') ? 'zh' : 'en';
+      const LANG = {
+        zh: { postButton: '发布投稿', commentButton: '评论' },
+        en: { postButton: 'Post', commentButton: 'Comment' }
+      };
+      const T = LANG[userLang];
+      const postBtn = document.getElementById('dynamic-post-button');
+      if (postBtn) postBtn.textContent = T.postButton;
+      document.querySelectorAll('.comment-button').forEach(btn => btn.textContent = T.commentButton);
     });
   </script>
 </body>
-
-</html>
-<!DOCTYPE html>
-<html lang="zh">
-
-<head>
-  <meta charset="UTF-8">
-  <title>暗恋是一件大事</title>
-  <link rel="stylesheet" href="/static/index.css">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-
-<body>
-  <h1>🌳 暗恋是一件大事 - 匿名投稿箱</h1>
-  <p style="text-align: center; color: gray;">👀 已有 {{ visit_count }} 次访问</p>
-  <p>微博：暗恋是一件大事<br>投稿格式无要求，会自动添加【编号】</p>
-
-  <form id="post-form">
-    <textarea name="content" placeholder="写点什么吧..." required></textarea><br>
-    <button type="submit" class="post-button">发布投稿</button>
-  </form>
-
-  <hr class="divider">
-
-  <div id="posts-container">
-    {% for post in posts %}
-    <div class="post" id="post-{{ post.id }}">
-      <p><strong>【{{ post.number }}】</strong> {{ post.content | safe }}</p>
-      <div class="timestamp">{{ post.created_at }}</div>
-
-      <div class="action-bar">
-        <div class="left-actions">
-          <button type="button" class="toggle-comments-btn">💬 查看评论（{{ post.comments_count }}）</button>
-        </div>
-        <div class="right-actions">
-          <form class="like-form" data-post-id="{{ post.id }}">
-            <button type="submit" class="like-button">👍 <span class="like-count">{{ post.likes }}</span></button>
-          </form>
-          {% if post.user_ip == user_ip %}
-          <form action="/delete/{{ post.id }}" method="post" onsubmit="return confirm('确定删除？');">
-            <button type="submit" class="delete-button">🗑 删除</button>
-          </form>
-          {% endif %}
-        </div>
-      </div>
-
-      <div class="comments-section" style="display: none;">
-        <div class="comments" id="comments-{{ post.id }}"></div>
-        <form class="comment-form" data-post-id="{{ post.id }}">
-          <input type="text" name="comment" placeholder="写下你的评论..." required>
-          <button type="submit" class="comment-button">评论</button>
-        </form>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-
-  {% if pagination.has_next %}
-  <button id="load-more" data-page="{{ pagination.next_num }}">加载更多</button>
-  {% endif %}
-
-  <script>
-    $(document).on('click', '#load-more', function () {
-      let page = $(this).data('page');
-      $.get(`/?page=${page}&ajax=1`, function (data) {
-        data.posts.forEach(function (post) {
-          let html = `
-            <div class="post" id="post-${post.id}">
-              <p><strong>【${post.number}】</strong> ${post.content}</p>
-              <div class="timestamp">${post.created_at}</div>
-              <div class="action-bar">
-                <div class="left-actions">
-                  <button type="button" class="toggle-comments-btn">💬 查看评论（${post.comments_count}）</button>
-                </div>
-                <div class="right-actions">
-                  <form class="like-form" data-post-id="${post.id}">
-                    <button type="submit" class="like-button">👍 <span class="like-count">${post.likes}</span></button>
-                  </form>
-                  ${post.user_ip === data.user_ip ?
-              `<form action="/delete/${post.id}" method="post" onsubmit="return confirm('确定删除？');">
-                      <button type="submit" class="delete-button">🗑 删除</button>
-                    </form>` : ''
-            }
-                </div>
-              </div>
-              <div class="comments-section" style="display: none;">
-                <div class="comments" id="comments-${post.id}"></div>
-                <form class="comment-form" data-post-id="${post.id}">
-                  <input type="text" name="comment" placeholder="写下你的评论..." required>
-                  <button type="submit" class="comment-button">评论</button>
-                </form>
-              </div>
-            </div>
-            `;
-          $('#posts-container').append(html);
-        });
-
-        if (data.has_next) {
-          $('#load-more').data('page', data.next_page);
-        } else {
-          $('#load-more').remove();
-        }
-      });
-    });
-  </script>
-</body>
-
 </html>
