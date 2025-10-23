@@ -1,4 +1,50 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // === 🌐 Language system ===
+    const userLang = navigator.language.startsWith('zh') ? 'zh' : 'en';
+
+    const LANG = {
+        zh: {
+            viewComments: '💬 查看评论（{count}）',
+            hideComments: '🔽 收起评论',
+            commentPlaceholder: '写下你的评论...',
+            commentButton: '评论',
+            postButton: '发布投稿',
+            likeButton: '👍',
+            deleteConfirm: '确定删除？',
+            deleteButton: '🗑 删除',
+            postSuccess: '发布成功！',
+            postFail: '发布失败',
+            commentFail: '评论提交失败',
+            justNow: '刚刚',
+            loadMore: '加载更多'
+        },
+        en: {
+            viewComments: '💬 View comments ({count})',
+            hideComments: '🔽 Hide comments',
+            commentPlaceholder: 'Write a comment...',
+            commentButton: 'Comment',
+            postButton: 'Post',
+            likeButton: '👍',
+            deleteConfirm: 'Delete this post?',
+            deleteButton: '🗑 Delete',
+            postSuccess: 'Posted successfully!',
+            postFail: 'Failed to post',
+            commentFail: 'Failed to submit comment',
+            justNow: 'just now',
+            loadMore: 'Load more'
+        }
+    };
+    const T = LANG[userLang];
+
+    // 初始化首屏按钮语言
+    const postBtn = document.getElementById('dynamic-post-button');
+    if (postBtn) postBtn.textContent = T.postButton;
+    document.querySelectorAll('.comment-button').forEach(btn => btn.textContent = T.commentButton);
+    document.querySelectorAll('input[name="comment"]').forEach(input => input.placeholder = T.commentPlaceholder);
+    const loadMoreBtnInit = document.getElementById('load-more');
+    if (loadMoreBtnInit) loadMoreBtnInit.textContent = T.loadMore;
+
+    // === ⏱️ 时间显示 ===
     function timeAgo(date) {
         const seconds = Math.floor((new Date() - new Date(date)) / 1000);
         const intervals = {
@@ -16,17 +62,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 return interval + ' ' + unit + (interval > 1 ? 's' : '') + ' ago';
             }
         }
-        return 'just now';
+        return T.justNow;
     }
 
     // 初始化时间显示
     document.querySelectorAll('.timestamp').forEach(el => {
         const utcTime = el.getAttribute('data-utc');
-        if (utcTime) {
-            el.textContent = timeAgo(utcTime);
-        }
+        if (utcTime) el.textContent = timeAgo(utcTime);
     });
 
+    // === 🧩 帖子事件绑定 ===
     function bindPostEvents(postElement) {
         const likeForm = postElement.querySelector('.like-form');
         if (likeForm) {
@@ -53,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const isHidden = section.style.display === 'none' || section.style.display === '';
             if (isHidden) {
                 section.style.display = 'block';
-                toggleButton.innerHTML = '🔽 收起评论';
+                toggleButton.innerHTML = T.hideComments;
 
                 if (!loaded) {
                     const response = await fetch(`/comment/${postId}`);
@@ -69,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             } else {
                 section.style.display = 'none';
-                toggleButton.innerHTML = `💬 查看评论（${commentList.querySelectorAll('.comment').length}）`;
+                toggleButton.innerHTML = T.viewComments.replace('{count}', commentList.querySelectorAll('.comment').length);
             }
         });
 
@@ -92,20 +137,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 const result = await response.json();
                 const div = document.createElement('div');
                 div.className = 'comment';
-                div.innerHTML = `💬 ${result.comment}<span class="comment-time">（刚刚）</span>`;
+                div.innerHTML = `💬 ${result.comment}<span class="comment-time">（${T.justNow}）</span>`;
                 commentList.appendChild(div);
                 input.value = '';
-                toggleButton.innerHTML = `💬 查看评论（${commentList.querySelectorAll('.comment').length}）`;
+                toggleButton.innerHTML = T.viewComments.replace('{count}', commentList.querySelectorAll('.comment').length);
             } else {
-                alert('评论提交失败');
+                alert(T.commentFail);
             }
         });
+
+        // 设置语言占位符和按钮文字
+        const commentBtn = commentForm.querySelector('.comment-button');
+        if (commentBtn) commentBtn.textContent = T.commentButton;
+        const commentInput = commentForm.querySelector('input[name="comment"]');
+        if (commentInput) commentInput.placeholder = T.commentPlaceholder;
     }
 
     // 绑定现有帖子事件
     document.querySelectorAll('.post').forEach(bindPostEvents);
 
-    // 发布投稿
+    // === 📝 发布投稿 ===
     document.getElementById('post-form').addEventListener('submit', async function (e) {
         e.preventDefault();
         const form = e.target;
@@ -126,36 +177,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="timestamp">${timeAgo(result.created_at)}</div>
                 <div class="action-bar">
                     <div class="left-actions">
-                        <button type="button" class="toggle-comments-btn">💬 查看评论（0）</button>
+                        <button type="button" class="toggle-comments-btn">${T.viewComments.replace('{count}', 0)}</button>
                     </div>
                     <div class="right-actions">
                         <form class="like-form" data-post-id="${result.id}">
-                            <button type="submit" class="like-button">👍 <span class="like-count">0</span></button>
+                            <button type="submit" class="like-button">${T.likeButton} <span class="like-count">0</span></button>
                         </form>
                     </div>
                 </div>
                 <div class="comments-section" style="display: none;">
                     <div class="comments" id="comments-${result.id}"></div>
                     <form class="comment-form" data-post-id="${result.id}">
-                        <input type="text" name="comment" placeholder="写下你的评论..." required>
-                        <button type="submit" class="comment-button">评论</button>
+                        <input type="text" name="comment" placeholder="${T.commentPlaceholder}" required>
+                        <button type="submit" class="comment-button">${T.commentButton}</button>
                     </form>
                 </div>
             </div>`;
-            const container = document.querySelector('.posts-container');
+            const container = document.querySelector('#posts-container');
             if (container) {
                 container.insertAdjacentHTML('afterbegin', postHtml);
                 const newPost = container.querySelector(`#post-${result.id}`);
                 bindPostEvents(newPost);
             }
             form.reset();
-            alert('发布成功！'); // 新增提示
+            alert(T.postSuccess);
         } else {
-            alert('发布失败');
+            alert(T.postFail);
         }
     });
 
-    // 加载更多
+    // === ⬇️ 加载更多 ===
     const loadMoreBtn = document.getElementById('load-more');
     if (loadMoreBtn) {
         loadMoreBtn.addEventListener('click', async function () {
@@ -170,23 +221,23 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="timestamp">${timeAgo(post.created_at)}</div>
                         <div class="action-bar">
                             <div class="left-actions">
-                                <button type="button" class="toggle-comments-btn">💬 查看评论（${post.comments_count}）</button>
+                                <button type="button" class="toggle-comments-btn">${T.viewComments.replace('{count}', post.comments_count)}</button>
                             </div>
                             <div class="right-actions">
                                 <form class="like-form" data-post-id="${post.id}">
-                                    <button type="submit" class="like-button">👍 <span class="like-count">${post.likes}</span></button>
+                                    <button type="submit" class="like-button">${T.likeButton} <span class="like-count">${post.likes}</span></button>
                                 </form>
                             </div>
                         </div>
                         <div class="comments-section" style="display: none;">
                             <div class="comments" id="comments-${post.id}"></div>
                             <form class="comment-form" data-post-id="${post.id}">
-                                <input type="text" name="comment" placeholder="写下你的评论..." required>
-                                <button type="submit" class="comment-button">评论</button>
+                                <input type="text" name="comment" placeholder="${T.commentPlaceholder}" required>
+                                <button type="submit" class="comment-button">${T.commentButton}</button>
                             </form>
                         </div>
                     </div>`;
-                    loadMoreBtn.insertAdjacentHTML('beforebegin', html); // 加载在按钮上方
+                    loadMoreBtn.insertAdjacentHTML('beforebegin', html);
                     bindPostEvents(document.getElementById(`post-${post.id}`));
                 });
 
