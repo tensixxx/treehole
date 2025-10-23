@@ -28,23 +28,26 @@ class Comment(db.Model):
 
 # === 初始化：仅当表不存在时创建 ===
 with app.app_context():
-    db.engine.execute(text("""
-    CREATE TABLE IF NOT EXISTS post (
-        id SERIAL PRIMARY KEY,
-        content TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        likes INTEGER DEFAULT 0,
-        user_ip VARCHAR(50)
-    );
-    """))
-    db.engine.execute(text("""
-    CREATE TABLE IF NOT EXISTS comment (
-        id SERIAL PRIMARY KEY,
-        post_id INTEGER REFERENCES post(id) ON DELETE CASCADE,
-        content TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """))
+    with db.engine.connect() as conn:
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS post (
+            id SERIAL PRIMARY KEY,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            likes INTEGER DEFAULT 0,
+            user_ip VARCHAR(50)
+        );
+        """))
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS comment (
+            id SERIAL PRIMARY KEY,
+            post_id INTEGER REFERENCES post(id) ON DELETE CASCADE,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """))
+        conn.commit()
+
 
 # === 首页 ===
 @app.route('/')
