@@ -1,30 +1,52 @@
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-import psycopg2
+from sqlalchemy import text
 
 app = Flask(__name__)
 
-# === 数据库配置（Railway PostgreSQL） ===
+# === Railway PostgreSQL 连接配置 ===
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:oRGFlMqTEqKgbOMtZeSYqXHgpjUCsWJN@shinkansen.proxy.rlwy.net:20191/railway'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # === 数据表定义 ===
 class Post(db.Model):
+    __tablename__ = 'post'
     id = db.Column(db.Integer, primary_key=True)
-    number = db.Column(db.Integer, unique=True)
     content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime)
     likes = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_ip = db.Column(db.String(50))
 
 class Comment(db.Model):
+    __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime)
 
-# === 首页显示 ===
+# === 初始化：仅当表不存在时创建 ===
+with app.app_context():
+    db.engine.execute(text("""
+    CREATE TABLE IF NOT EXISTS post (
+        id SERIAL PRIMARY KEY,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        likes INTEGER DEFAULT 0,
+        user_ip VARCHAR(50)
+    );
+    """))
+    db.engine.execute(text("""
+    CREATE TABLE IF NOT EXISTS comment (
+        id SERIAL PRIMARY KEY,
+        post_id INTEGER REFERENCES post(id) ON DELETE CASCADE,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """))
+
+# === 首页 ===
 @app.route('/')
 def index():
     page = int(request.args.get('page', 1))
@@ -35,10 +57,10 @@ def index():
         comments_count = Comment.query.filter_by(post_id=post.id).count()
         posts.append({
             'id': post.id,
-            'number': post.number,
+            'number': post.id,
             'content': post.content,
             'likes': post.likes,
-            'created_at': post.created_at.isoformat(),
+            'created_at': post.created_at.isoformat() if post.created_at else '',
             'comments_count': comments_count
         })
     if request.args.get('ajax') == '1':
@@ -56,14 +78,14 @@ def add_post():
     if not content:
         return jsonify({'error': 'Empty content'}), 400
 
-    number = (db.session.query(db.func.max(Post.number)).scalar() or 0) + 1
-    new_post = Post(number=number, content=content)
+    user_ip = request.remote_addr or 'unknown'
+    new_post = Post(content=content, user_ip=user_ip, created_at=datetime.utcnow())
     db.session.add(new_post)
     db.session.commit()
 
     return jsonify({
         'id': new_post.id,
-        'number': new_post.number,
+        'number': new_post.id,
         'content': new_post.content,
         'likes': new_post.likes,
         'created_at': new_post.created_at.isoformat()
@@ -75,7 +97,7 @@ def like_post(post_id):
     post = Post.query.get(post_id)
     if not post:
         return jsonify({'success': False, 'message': 'Post not found'})
-    post.likes += 1
+    post.likes = (post.likes or 0) + 1
     db.session.commit()
     return jsonify({'success': True, 'likes': post.likes})
 
@@ -90,13 +112,25 @@ def comment(post_id):
         content = request.json.get('comment', '').strip()
         if not content:
             return jsonify({'error': 'Empty comment'}), 400
-        new_comment = Comment(post_id=post.id, content=content)
+        new_comment = Comment(post_id=post.id, content=content, created_at=datetime.utcnow())
         db.session.add(new_comment)
         db.session.commit()
         return jsonify({'comment': content})
     else:
         comments = Comment.query.filter_by(post_id=post.id).order_by(Comment.id.asc()).all()
-        return jsonify([{'content': c.content, 'created_at': c.created_at.strftime('%Y-%m-%d %H:%M:%S')} for c in comments])
+        return jsonify([
+            {
+                'content': c.content,
+                'created_at': c.created_at.strftime('%Y-%m-%d %H:%M:%S') if c.created_at else ''
+            } for c in comments
+        ])
 
+# === 错误处理 ===
+@app.errorhandler(Exception)
+def handle_error(e):
+    print(f"❌ Error: {e}")
+    return jsonify({'error': str(e)}), 500
+
+# === 启动服务器 ===
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0', port=5000)
