@@ -6,7 +6,7 @@ import psycopg2
 app = Flask(__name__)
 
 # === 数据库配置（Railway PostgreSQL） ===
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:oRGFlMqTEqKgbOMtZeSYqXHgpjUCsWJN@postgres.railway.internal:5432/railway'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:oRGFlMqTEqKgbOMtZeSYqXHgpjUCsWJN@shinkansen.proxy.rlwy.net:20191/railway'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
