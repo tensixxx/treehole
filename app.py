@@ -26,6 +26,11 @@ class Comment(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime)
 
+class Visit(db.Model):
+    __tablename__ = 'visit'
+    id = db.Column(db.Integer, primary_key=True)
+    count = db.Column(db.Integer, default=0)
+
 # === 初始化：仅当表不存在时创建 ===
 with app.app_context():
     with db.engine.connect() as conn:
@@ -46,8 +51,13 @@ with app.app_context():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """))
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS visit (
+            id SERIAL PRIMARY KEY,
+            count INTEGER DEFAULT 0
+        );
+        """))
         conn.commit()
-
 
 # === 首页 ===
 @app.route('/')
@@ -66,13 +76,24 @@ def index():
             'created_at': post.created_at.isoformat() if post.created_at else '',
             'comments_count': comments_count
         })
+
+    # === 更新访问量 ===
+    visit_record = Visit.query.first()
+    if not visit_record:
+        visit_record = Visit(count=1)
+        db.session.add(visit_record)
+    else:
+        visit_record.count += 1
+    db.session.commit()
+
     if request.args.get('ajax') == '1':
         return jsonify({
             'posts': posts,
             'has_next': pagination.has_next,
             'next_page': pagination.next_num
         })
-    return render_template('index.html', posts=posts, pagination=pagination, visit_count=Post.query.count())
+
+    return render_template('index.html', posts=posts, pagination=pagination, visit_count=visit_record.count)
 
 # === 新增投稿 ===
 @app.route('/add', methods=['POST'])
