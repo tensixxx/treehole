@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function () {
     // === 🌐 Language system ===
     const userLang = navigator.language.startsWith('zh') ? 'zh' : 'en';
 
@@ -36,6 +36,17 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const T = LANG[userLang];
 
+    // === 🌍 动态访问量语言切换 ===
+    const visitText = document.getElementById('visit-text');
+    if (visitText) {
+        const count = visitText.dataset.count;
+        if (userLang.startsWith('zh')) {
+            visitText.textContent = `👀 已有 ${count} 次访问`;
+        } else {
+            visitText.textContent = `👀 Visited ${count} times`;
+        }
+    }
+
     // 初始化首屏按钮语言
     const postBtn = document.getElementById('dynamic-post-button');
     if (postBtn) postBtn.textContent = T.postButton;
@@ -43,6 +54,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('input[name="comment"]').forEach(input => input.placeholder = T.commentPlaceholder);
     const loadMoreBtnInit = document.getElementById('load-more');
     if (loadMoreBtnInit) loadMoreBtnInit.textContent = T.loadMore;
+
+    // ...（下面保持你原本的代码不变）
+});
 
     // === ⏱️ 时间显示 ===
     function timeAgo(date) {
@@ -249,4 +263,3 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-});
